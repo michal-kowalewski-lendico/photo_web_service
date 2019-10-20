@@ -1,10 +1,12 @@
 package com.mike.service.impl;
 
+import com.mike.exception.UserServiceException;
 import com.mike.io.repository.UserRepository;
 import com.mike.io.entity.UserEntity;
 import com.mike.shared.Utils;
 import com.mike.shared.dto.UserDto;
 import com.mike.service.UserService;
+import com.mike.ui.model.response.ErrorMessages;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
@@ -51,7 +53,10 @@ public class UserServiceImpl implements UserService {
     public UserDto getUserByEmail(String email) {
         UserEntity userEntity = userRepository.findByEmail(email);
 
-        if(null == userEntity) throw new UsernameNotFoundException(email);
+//        it could be UsernameNotFoundException
+//        if(null == userEntity) throw new UsernameNotFoundException(email);
+//        or
+        if(null == userEntity) throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
 
         UserDto returnValue = new UserDto();
         BeanUtils.copyProperties(userEntity, returnValue);
@@ -63,12 +68,37 @@ public class UserServiceImpl implements UserService {
     public UserDto getUserByUserId(String userId) {
         UserEntity userEntity = userRepository.findByUserId(userId);
 
-        if(null == userEntity) throw new UsernameNotFoundException(userId);
+        if(null == userEntity) throw new UsernameNotFoundException("User with Id: " + userId + " not found.");
 
         UserDto returnValue = new UserDto();
         BeanUtils.copyProperties(userEntity, returnValue);
 
         return returnValue;
+    }
+
+    @Override
+    public UserDto updateUser(String userId, UserDto userDto) {
+        UserEntity userEntity = userRepository.findByUserId(userId);
+
+        if(null == userEntity) throw new UsernameNotFoundException(userId);
+
+        userEntity.setFirstName(userDto.getFirstName());
+        userEntity.setLastName(userDto.getLastName());
+
+        UserEntity updatedUser = userRepository.save(userEntity);
+        UserDto returnValue = new UserDto();
+        BeanUtils.copyProperties(updatedUser, returnValue);
+
+        return returnValue;
+    }
+
+    @Override
+    public void deleteUser(String userId) {
+        UserEntity userEntity = userRepository.findByUserId(userId);
+
+        if(null == userEntity) throw new UsernameNotFoundException(userId);
+
+        userRepository.delete(userEntity);
     }
 
     @Override

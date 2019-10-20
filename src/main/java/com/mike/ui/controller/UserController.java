@@ -2,8 +2,11 @@ package com.mike.ui.controller;
 
 import com.mike.exception.UserServiceException;
 import com.mike.shared.dto.UserDto;
+import com.mike.ui.model.request.RequestOperationName;
 import com.mike.ui.model.request.UserDetailsRequestModel;
 import com.mike.ui.model.response.ErrorMessages;
+import com.mike.ui.model.response.OperationStatusModel;
+import com.mike.ui.model.response.RequestOperationStatus;
 import com.mike.ui.model.response.UserRest;
 import com.mike.service.UserService;
 import org.springframework.beans.BeanUtils;
@@ -18,11 +21,12 @@ public class UserController {
     @Autowired
     UserService userService;
 
-    @GetMapping(path = "/{id}",
+    @GetMapping(path = "/{userid}",
         produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-    public UserRest getUser(@PathVariable String id){
+    public UserRest getUser(@PathVariable String userid){
 
-        UserDto userDto = userService.getUserByUserId(id);
+        UserDto userDto = userService.getUserByUserId(userid);
+
         UserRest returnValue = new UserRest();
 
         BeanUtils.copyProperties(userDto, returnValue);
@@ -41,6 +45,7 @@ public class UserController {
         BeanUtils.copyProperties(userDetailsRequestModel, userDto);
 
         UserDto createdUser = userService.createUser(userDto);
+
         UserRest returnValue = new UserRest();
 
         BeanUtils.copyProperties(createdUser, returnValue);
@@ -48,13 +53,35 @@ public class UserController {
         return returnValue;
     }
 
-    @PutMapping
-    public String updateUser(){
-        return "update was called";
+    @PutMapping(path = "/{userid}",
+            consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+    public UserRest updateUser(@PathVariable String userid, @RequestBody UserDetailsRequestModel userDetailsRequestModel){
+
+        UserDto userDto = new UserDto();
+
+        BeanUtils.copyProperties(userDetailsRequestModel, userDto);
+
+        UserDto updatedUser = userService.updateUser(userid, userDto);
+
+        UserRest returnValue = new UserRest();
+
+        BeanUtils.copyProperties(updatedUser, returnValue);
+
+        return returnValue;
     }
 
-    @DeleteMapping
-    public String deleteUser(){
-        return "delete was called";
+    @DeleteMapping(path = "/{userid}",
+            produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+    public OperationStatusModel deleteUser(@PathVariable String userid){
+
+        OperationStatusModel operationStatusModel = new OperationStatusModel();
+        operationStatusModel.setOperationName(RequestOperationName.DELETE.name());
+
+        userService.deleteUser(userid);
+
+        operationStatusModel.setOperationResult(RequestOperationStatus.SUCCESS.name());
+
+        return operationStatusModel;
     }
 }
