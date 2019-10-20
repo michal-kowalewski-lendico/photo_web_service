@@ -1,4 +1,4 @@
-package com.mike;
+package com.mike.io.repository;
 
 import com.mike.io.entity.UserEntity;
 import org.springframework.data.repository.CrudRepository;
