@@ -1,7 +1,9 @@
 package com.mike.ui.controller;
 
+import com.mike.exception.UserServiceException;
 import com.mike.shared.dto.UserDto;
 import com.mike.ui.model.request.UserDetailsRequestModel;
+import com.mike.ui.model.response.ErrorMessages;
 import com.mike.ui.model.response.UserRest;
 import com.mike.service.UserService;
 import org.springframework.beans.BeanUtils;
@@ -30,7 +32,9 @@ public class UserController {
 
     @PostMapping(consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-    public UserRest createUser(@RequestBody UserDetailsRequestModel userDetailsRequestModel){
+    public UserRest createUser(@RequestBody UserDetailsRequestModel userDetailsRequestModel) throws UserServiceException {
+
+        if(userDetailsRequestModel.getFirstName().isEmpty()) throw new UserServiceException(ErrorMessages.MISSING_REQUIRED_FIELD.getErrorMessage());
 
         UserDto userDto = new UserDto();
 
