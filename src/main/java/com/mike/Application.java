@@ -1,5 +1,6 @@
 package com.mike;
 
+import com.mike.security.AppProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +16,11 @@ public class Application {
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder(){
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean(name="AppProperties")
+    public AppProperties getAppProperties() {
+        return new AppProperties();
     }
 
     @Bean
