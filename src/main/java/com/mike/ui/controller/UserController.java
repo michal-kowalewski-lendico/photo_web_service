@@ -14,12 +14,32 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @RestController
 @RequestMapping("users")
 public class UserController {
 
     @Autowired
     UserService userService;
+
+    @GetMapping(produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+    public List<UserRest> getUsers(@RequestParam(value = "page", defaultValue = "1") int page,
+                                   @RequestParam(value = "limit", defaultValue = "25") int limit){
+
+        List<UserDto> userDtos = userService.getUsers(page, limit);
+
+        List<UserRest> returnValue = new ArrayList<>();
+
+        for(UserDto userDto : userDtos){
+            UserRest userRest = new UserRest();
+            BeanUtils.copyProperties(userDto, userRest);
+            returnValue.add(userRest);
+        }
+
+        return returnValue;
+    }
 
     @GetMapping(path = "/{userid}",
         produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
