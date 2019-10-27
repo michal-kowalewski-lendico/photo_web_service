@@ -9,6 +9,7 @@ import com.mike.ui.model.response.OperationStatusModel;
 import com.mike.ui.model.response.RequestOperationStatus;
 import com.mike.ui.model.response.UserRest;
 import com.mike.service.UserService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -60,17 +61,15 @@ public class UserController {
 
         if(userDetailsRequestModel.getFirstName().isEmpty()) throw new UserServiceException(ErrorMessages.MISSING_REQUIRED_FIELD.getErrorMessage());
 
-        UserDto userDto = new UserDto();
+//        UserDto userDto = new UserDto();
+//        BeanUtils.copyProperties(userDetailsRequestModel, userDto);
 
-        BeanUtils.copyProperties(userDetailsRequestModel, userDto);
+        ModelMapper modelMapper = new ModelMapper();
+        UserDto userDto = modelMapper.map(userDetailsRequestModel, UserDto.class);
 
         UserDto createdUser = userService.createUser(userDto);
 
-        UserRest returnValue = new UserRest();
-
-        BeanUtils.copyProperties(createdUser, returnValue);
-
-        return returnValue;
+        return modelMapper.map(createdUser, UserRest.class);
     }
 
     @PutMapping(path = "/{userid}",

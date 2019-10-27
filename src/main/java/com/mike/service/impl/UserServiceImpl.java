@@ -4,9 +4,11 @@ import com.mike.exception.UserServiceException;
 import com.mike.io.repository.UserRepository;
 import com.mike.io.entity.UserEntity;
 import com.mike.shared.Utils;
+import com.mike.shared.dto.AddressDto;
 import com.mike.shared.dto.UserDto;
 import com.mike.service.UserService;
 import com.mike.ui.model.response.ErrorMessages;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -57,11 +59,20 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto createUser(UserDto userDto) {
-
         if(userRepository.findByEmail(userDto.getEmail()) != null) throw new RuntimeException("Record already exist");
 
-        UserEntity userEntity = new UserEntity();
-        BeanUtils.copyProperties(userDto, userEntity);
+        ModelMapper modelMapper = new ModelMapper();
+
+        for(int i=0; i < userDto.getAddresses().size(); i++){
+
+             AddressDto addressDto = userDto.getAddresses().get(i);
+             addressDto.setAddressId(utils.generateAddressId(30));
+             addressDto.setUserDetails(userDto);
+             userDto.getAddresses().set(i, addressDto);
+
+        }
+
+        UserEntity userEntity = modelMapper.map(userDto, UserEntity.class);
 
         String publicUserId = utils.generateUserId(30);
         userEntity.setUserId(publicUserId);
@@ -69,10 +80,7 @@ public class UserServiceImpl implements UserService {
 
         UserEntity storedUserEntity = userRepository.save(userEntity);
 
-        UserDto returnValue = new UserDto();
-        BeanUtils.copyProperties(storedUserEntity, returnValue);
-
-        return returnValue;
+        return modelMapper.map(storedUserEntity, UserDto.class);
     }
 
     @Override
