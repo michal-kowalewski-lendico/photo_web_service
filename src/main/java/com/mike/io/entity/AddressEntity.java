@@ -1,5 +1,6 @@
 package com.mike.io.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.mike.shared.dto.UserDto;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -39,6 +40,7 @@ public class AddressEntity implements Serializable {
     @Column(length = 10, nullable = false)
     private String type;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "users_id") //users_id because it's an id column from users table
     private UserEntity userDetails;

@@ -1,20 +1,21 @@
 package com.mike.ui.controller;
 
 import com.mike.exception.UserServiceException;
+import com.mike.service.AddressService;
+import com.mike.shared.dto.AddressDto;
 import com.mike.shared.dto.UserDto;
 import com.mike.ui.model.request.RequestOperationName;
 import com.mike.ui.model.request.UserDetailsRequestModel;
-import com.mike.ui.model.response.ErrorMessages;
-import com.mike.ui.model.response.OperationStatusModel;
-import com.mike.ui.model.response.RequestOperationStatus;
-import com.mike.ui.model.response.UserRest;
+import com.mike.ui.model.response.*;
 import com.mike.service.UserService;
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +25,11 @@ public class UserController {
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    AddressService addressService;
+
+    private ModelMapper modelMapper = new ModelMapper();
 
     @GetMapping(produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
     public List<UserRest> getUsers(@RequestParam(value = "page", defaultValue = "1") int page,
@@ -42,11 +48,11 @@ public class UserController {
         return returnValue;
     }
 
-    @GetMapping(path = "/{userid}",
+    @GetMapping(path = "/{userId}",
         produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-    public UserRest getUser(@PathVariable String userid){
+    public UserRest getUser(@PathVariable String userId){
 
-        UserDto userDto = userService.getUserByUserId(userid);
+        UserDto userDto = userService.getUserByUserId(userId);
 
         UserRest returnValue = new UserRest();
 
@@ -64,7 +70,6 @@ public class UserController {
 //        UserDto userDto = new UserDto();
 //        BeanUtils.copyProperties(userDetailsRequestModel, userDto);
 
-        ModelMapper modelMapper = new ModelMapper();
         UserDto userDto = modelMapper.map(userDetailsRequestModel, UserDto.class);
 
         UserDto createdUser = userService.createUser(userDto);
@@ -72,16 +77,16 @@ public class UserController {
         return modelMapper.map(createdUser, UserRest.class);
     }
 
-    @PutMapping(path = "/{userid}",
+    @PutMapping(path = "/{userId}",
             consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-    public UserRest updateUser(@PathVariable String userid, @RequestBody UserDetailsRequestModel userDetailsRequestModel){
+    public UserRest updateUser(@PathVariable String userId, @RequestBody UserDetailsRequestModel userDetailsRequestModel){
 
         UserDto userDto = new UserDto();
 
         BeanUtils.copyProperties(userDetailsRequestModel, userDto);
 
-        UserDto updatedUser = userService.updateUser(userid, userDto);
+        UserDto updatedUser = userService.updateUser(userId, userDto);
 
         UserRest returnValue = new UserRest();
 
@@ -90,17 +95,40 @@ public class UserController {
         return returnValue;
     }
 
-    @DeleteMapping(path = "/{userid}",
+    @DeleteMapping(path = "/{userId}",
             produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
-    public OperationStatusModel deleteUser(@PathVariable String userid){
+    public OperationStatusModel deleteUser(@PathVariable String userId){
 
         OperationStatusModel operationStatusModel = new OperationStatusModel();
         operationStatusModel.setOperationName(RequestOperationName.DELETE.name());
 
-        userService.deleteUser(userid);
+        userService.deleteUser(userId);
 
         operationStatusModel.setOperationResult(RequestOperationStatus.SUCCESS.name());
 
         return operationStatusModel;
+    }
+
+    @GetMapping(path = "/{userId}/addresses",
+            produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+    public List<AddressRest> getUserAddresses(@PathVariable String userId){
+
+        List<AddressDto> addressDtos = addressService.getAddressesByUserId(userId);
+
+        if(addressDtos == null || addressDtos.isEmpty()) return null;
+
+        Type listType = new TypeToken<List<AddressRest>>() {}.getType();
+        return modelMapper.map(addressDtos, listType);
+    }
+
+    @GetMapping(path = "/{userId}/addresses/{addressId}",
+            produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+    public AddressRest getUserAddressById(@PathVariable String addressId){
+
+        AddressDto addressDto = addressService.getAddressById(addressId);
+
+        if(addressDto == null) return null;
+
+        return modelMapper.map(addressDto, AddressRest.class);
     }
 }
